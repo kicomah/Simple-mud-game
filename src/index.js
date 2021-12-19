@@ -5,6 +5,7 @@ const crypto = require("crypto");
 
 const { constantManager, mapManager } = require("./datas/Manager");
 const { Player } = require("./models/Player");
+const { battle } = require("./utils/battle");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -91,27 +92,33 @@ app.post("/action", authentication, async (req, res) => {
     player.x = x;
     player.y = y;
 
+    console.log('---------event---------')
     const events = field.events;
-    console.log(events)
+    // console.log(events)
     const actions = [];
     if (events.length > 0) {
       // TODO [DONE]: 확률별로 이벤트 발생하도록 변경
       let i;
       let random = Math.ceil(Math.random() * 100);
-      console.log(random)
+      // console.log(random)
       for (i=0; i<events.length; i++) {
         random = random - events[i].percent;
-        if (random < 0) {
+        if (random <= 0) {
           break;
         }
       }
       const _event = events[i];
       console.log('Randomly chosen event:', _event)
       if (_event.type === "battle") {
-        // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
-        
-        event = { description: "늑대와 마주쳐 싸움을 벌였다." };
-        player.incrementHP(-1);
+        // TODO : 이벤트 별로 events.json 에서 불러와 이벤트 처리
+
+        // 둘 중 하나 죽을때가지 싸우고, event는 description이 적절히 리턴됨.
+        event = battle(_event, player)
+        if(player.HP <= 0) {
+          // TODO : 플레이어 사망
+        } else {
+          // TODO : 플레이어가 몬스터 죽임. 경험치 획득
+        }
       } else if (_event.type === "item") {
         event = { description: "포션을 획득해 체력을 회복했다." };
         player.incrementHP(1);
