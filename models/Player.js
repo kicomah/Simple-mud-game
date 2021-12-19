@@ -24,4 +24,4 @@ const Player = mongoose.model("Player", schema);
 
 module.exports = {
   Player
-};
+}
