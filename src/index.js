@@ -12,8 +12,9 @@ app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 app.engine("html", require("ejs").renderFile);
 
+const mongoURL = "mongodb+srv://new-user0:asdfasdf@cluster0.jw1fm.mongodb.net/fp1?retryWrites=true&w=majority";
 mongoose.connect(
-  "mongodb+srv://tester123:tester123@cluster0.ye4cg.mongodb.net/myFirstDatabase?",
+  mongoURL,
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 
@@ -91,13 +92,24 @@ app.post("/action", authentication, async (req, res) => {
     player.y = y;
 
     const events = field.events;
+    console.log(events)
     const actions = [];
     if (events.length > 0) {
-      // TODO : 확률별로 이벤트 발생하도록 변경
-      const _event = events[0];
+      // TODO [DONE]: 확률별로 이벤트 발생하도록 변경
+      let i;
+      let random = Math.ceil(Math.random() * 100);
+      console.log(random)
+      for (i=0; i<events.length; i++) {
+        random = random - events[i].percent;
+        if (random < 0) {
+          break;
+        }
+      }
+      const _event = events[i];
+      console.log('Randomly chosen event:', _event)
       if (_event.type === "battle") {
         // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
-
+        
         event = { description: "늑대와 마주쳐 싸움을 벌였다." };
         player.incrementHP(-1);
       } else if (_event.type === "item") {
