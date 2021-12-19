@@ -22,8 +22,7 @@
     </div>
 
   <script>
-
-const sendAction = (url, params = {}) => {
+    const sendAction = (url, params = {}) => {
       $.ajax({
         url,
         headers: {
@@ -31,8 +30,9 @@ const sendAction = (url, params = {}) => {
         },
         method: "POST",
         data: $.param(params),
-      }).done((req) => {
-        const { player, field, event, actions } = req;
+      }).done((res) => {
+        console.log(res)
+        const { player, field, event, actions } = res;
 
         $('#game').text(field.description);
         $('#position').text(`(${field.x},${field.y})`);
@@ -40,8 +40,8 @@ const sendAction = (url, params = {}) => {
         const y = field.y;
 
         $('#control').html('');
-        req.actions.forEach((action) => {
-          const dom = $('<button></button');
+        res.actions.forEach((action) => {
+          const dom = $('<button></button>');
           dom.text(action.text);
           dom.bind('click', function () {
               sendAction(action.url, action.params);
@@ -59,16 +59,14 @@ const sendAction = (url, params = {}) => {
         $('#HP').text(`${player.HP} / ${player.maxHP}`)
       });
 
-    } 
+    }
+
     const key = localStorage.getItem('_key');
     if (!key) {
       location.href = "/";
     }
 
     sendAction("/action", {action: 'query'});
-
-    
-
   </script>
   </body>
 </html>
