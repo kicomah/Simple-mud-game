@@ -15,4 +15,4 @@ const battle = (_event, player) => {
   return { description: `${monster.name}와 마주쳐 싸움을 벌였다.` };
 }
 
-module.exports = {battle} 
+module.exports = {battle}
