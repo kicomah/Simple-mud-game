@@ -116,6 +116,9 @@ app.post("/action", authentication, async (req, res) => {
         event = battle(_event, player)
         if(player.HP <= 0) {
           // TODO : 플레이어 사망
+          player.x = 0;
+          player.y = 0;
+
         } else {
           // TODO : 플레이어가 몬스터 죽임. 경험치 획득
         }
