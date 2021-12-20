@@ -28,8 +28,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-
-
 //뷰 엔진 (api 로그인,회원가입 기능 테스트 완료후 뷰 연결)
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -37,15 +35,11 @@ app.use("/static", express.static(path.join(__dirname, 'public')));
 
 
 //플레이어 선택, 생성 화면
-app.get('/', async (req, res) => {
-    if (req.cookies.auth != "") {
-        var email = req.cookies.email;
-        var players = await Player.find().where({ email })
-        res.render("home", { data: { players } })
-    }
-    else {
-        res.redirect(301, '/login')
-    }
+app.get('/', setAuth, async (req, res) => {
+    var email = req.cookies.email;
+    // console.log(email)
+    var players = await Player.find().where({ email })
+    res.render("home", { data: { players } })
 })
 
 
