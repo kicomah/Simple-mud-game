@@ -18,7 +18,7 @@ mongoose.connect(
 );
 
 const authentication = async (req, res, next) => {
-  const { authorization } = req.headers;
+  const { authorization } = req.cookies.authorization;
   if (!authorization) return res.sendStatus(401);
   const [bearer, key] = authorization.split(" ");
   if (bearer !== "Bearer") return res.sendStatus(401);
@@ -39,11 +39,9 @@ app.get("/game", (req, res) => {
 
 app.post("/signup", async (req, res) => {
   const { name } = req.body;
-
   if (await Player.exists({ name })) {
     return res.status(400).send({ error: "Player already exists" });
   }
-
   const player = new Player({
     name,
     maxHP: 10,
@@ -53,12 +51,9 @@ app.post("/signup", async (req, res) => {
     x: 0,
     y: 0
   });
-
   const key = crypto.randomBytes(24).toString("hex");
   player.key = key;
-
   await player.save();
-
   return res.send({ key });
 });
 

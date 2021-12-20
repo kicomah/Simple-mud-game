@@ -22,6 +22,4 @@ schema.methods.incrementHP = function (val) {
 
 const Player = mongoose.model("Player", schema);
 
-module.exports = {
-  Player
-};
+module.exports = Player;
