@@ -32,15 +32,27 @@ class MapManager extends Manager {
     return this.fields[`${x}_${y}`];
   }
 }
+
+class MonsterManager extends Manager {
+  constructor(datas) {
+    super();
+    this.monsters = datas;
+  }
+}
 const constantManager = new ConstantManager(
-  JSON.parse(fs.readFileSync(__dirname + "/data/constants.json"))
+  JSON.parse(fs.readFileSync(__dirname + "/constants.json"))
 );
 
 const mapManager = new MapManager(
-  JSON.parse(fs.readFileSync(__dirname + "/data/map.json"))
+  JSON.parse(fs.readFileSync(__dirname + "/map.json"))
 );
+
+const monsterManager = new MonsterManager(
+  JSON.parse(fs.readFileSync(__dirname + "/monsters.json"))
+)
 
 module.exports = {
   constantManager,
-  mapManager
+  mapManager,
+  monsterManager,
 };
