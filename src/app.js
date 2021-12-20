@@ -5,11 +5,12 @@ const path = require('path')
 const crypto = require('crypto')
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
 const { encryptPassword, setAuth } = require("./utils");
 // const { constantManager, mapManager } = require("./models/Manager");
-const { GamePlayer } = require("./models/Player");
+// const { GamePlayer } = require("./models/Player");
 const fs = require('fs')
-const { User, Player } = require('./models/User');
+const { User, Player } = require('./models');
 dotenv.config()
 
 //몽고 DB 연결
@@ -26,6 +27,7 @@ mongoose.connect(mongoURL, {
 //json처리
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 
 
@@ -36,27 +38,22 @@ app.use("/static", express.static(path.join(__dirname, 'public')));
 
 
 //플레이어 선택, 생성 화면
-app.get('/', async (req, res) => {
-    let auth = req.cookies;
-    try {
-        if (auth.hasOwnProperty('authorization')) {
-            var auth_key = req.cookies.authorization
-            var players = await Player.find().where({ auth_key })
-        }
-        else {
-            res.redirect(301, '/login')
-        }
-        if (auth.hasOwnProperty('email')){
-            var email = req.cookies.email
-            var players = await Player.find().where({ email })
-            res.render("home", { data: { players } })
-        } else {
-            res.redirect(301, '/login')
-        }
-    } catch {
-        res.redirect(301, '/login')
-    }
-    
+app.get('/', setAuth ,async (req, res) => {
+    // if (req.cookies.authorization != "") {
+    //     var auth_key = req.cookies.authorization;
+    //     var players = await Player.find().where({ auth_key })
+    //     if (req.cookies.email != "") {
+    //         var email = req.cookies.email;
+    //         var players = await Player.find().where({ email })
+    //         res.render("home", { data: { players } })
+    //     }
+    // }
+    // else {
+    //     res.redirect(301, '/login')
+    // }
+    var email = req.cookies.email;
+    var players = await Player.find().where({ email })
+    res.render("home", { data: { players } })
 })
 
 
@@ -89,16 +86,15 @@ app.post('/login', async (req, res) => {
         return res.status(403).json({ error: 'email or password is invaild' });
 
     user.key = encryptPassword(crypto.randomBytes(20));
-    let header_auth = `Bearer ${user.key}`;
-    res.cookie(
-        'authorization', header_auth, {
-            // maxAge: 1000 * 60 * 30
-        });
+    let auth_key = `Bearer ${user.key}`;
+    res.cookie('authorization', auth_key, {
+        maxAge: 1000 * 60 * 30
+    });
     res.cookie('email', email, {
-        // maxAge: 1000 * 60 * 30
+        maxAge: 1000 * 60 * 30
     });
     await user.save();
-    res.status(200).json({ key: user.key });
+    res.redirect(301, '/');
 })
 
 
@@ -149,15 +145,10 @@ app.get('/player/:name', setAuth, async (req, res) => {
 })
 
 //맵 화면
-app.get('/player/map/:name', async (req, res) => {
-    var sess = req.session
-    if (sess.key) {
-        var name = req.params.name
-        var player = await Player.findOne({ name })
-        res.render("map", { data: { player } })
-    } else {
-        res.redirect('/login')
-    }
+app.get('/player/map/:name', setAuth ,async (req, res) => {
+    var name = req.params.name
+    var player = await Player.findOne({ name })
+    res.render("map", { data: { player } })
 })
 
 app.post("/action", setAuth, async (req, res) => {

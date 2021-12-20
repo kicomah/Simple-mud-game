@@ -61,11 +61,6 @@
             axios.post('/player/create',
                 {
                     name: name
-                },
-                {
-                    headers: {
-                        authorization: key
-                    }
                 }
             ).then(() => {
                 location.reload()
