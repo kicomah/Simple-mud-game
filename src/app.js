@@ -7,8 +7,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const { encryptPassword, setAuth } = require("./utils");
-// const { constantManager, mapManager } = require("./models/Manager");
-// const { GamePlayer } = require("./models/Player");
+const { constantManager, mapManager } = require("./models/Manager");
 const fs = require('fs')
 const { User, Player } = require('./models');
 dotenv.config()
@@ -38,22 +37,15 @@ app.use("/static", express.static(path.join(__dirname, 'public')));
 
 
 //플레이어 선택, 생성 화면
-app.get('/', setAuth ,async (req, res) => {
-    // if (req.cookies.authorization != "") {
-    //     var auth_key = req.cookies.authorization;
-    //     var players = await Player.find().where({ auth_key })
-    //     if (req.cookies.email != "") {
-    //         var email = req.cookies.email;
-    //         var players = await Player.find().where({ email })
-    //         res.render("home", { data: { players } })
-    //     }
-    // }
-    // else {
-    //     res.redirect(301, '/login')
-    // }
-    var email = req.cookies.email;
-    var players = await Player.find().where({ email })
-    res.render("home", { data: { players } })
+app.get('/', async (req, res) => {
+    if (req.cookies.auth) {
+        var email = req.cookies.email;
+        var players = await Player.find().where({ email })
+        res.render("home", { data: { players } })
+    }
+    else {
+        res.redirect(301, '/login')
+    }
 })
 
 
@@ -148,7 +140,7 @@ app.get('/player/:name', setAuth, async (req, res) => {
 app.get('/player/map/:name', setAuth ,async (req, res) => {
     var name = req.params.name
     var player = await Player.findOne({ name })
-    res.render("map", { data: { player } })
+    res.render("game", { data: { player } })
 })
 
 app.post("/action", setAuth, async (req, res) => {
