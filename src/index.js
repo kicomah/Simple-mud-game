@@ -10,11 +10,12 @@ const { encryptPassword, setAuth } = require("./utils");
 const { constantManager, mapManager } = require("./datas/Manager");
 const fs = require('fs')
 const { User, Player } = require('./models');
+const { battle } = require('./utils/battle')
 dotenv.config("./src")
 
 //몽고 DB 연결
 // const mongoURL = process.env.MONGODB_URL
-mongoose.connect("mongodb+srv://tester123:tester123@cluster0.ye4cg.mongodb.net/myFirstDatabase?", {
+mongoose.connect("mongodb+srv://new-user0:asdfasdf@cluster0.jw1fm.mongodb.net/fp3?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 }).then(() => {
@@ -33,26 +34,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use("/static", express.static(path.join(__dirname, 'public')));
 
-const setPlayer = async (req, res, next) => {
-    const { authorization } = req.headers;
-    if (!authorization) return res.sendStatus(401);
-    const [bearer, key] = authorization.split(" ");
-    if (bearer !== "Bearer") return res.sendStatus(401);
-    const player = await Player.findOne({ key });
-    if (!player) return res.sendStatus(401);
-
-    req.player = player;
-    next();
-};
-
 //플레이어 선택, 생성 화면
 app.get('/', setAuth, async (req, res) => {
     var email = req.cookies.email;
-    // console.log(email);
-    var players = await Player.find().where({ email })
-    res.render("home", { data: { players } })
+    if(req.user.name) {
+      res.redirect("/game")
+    } else {
+      res.render("home")
+    }
 })
 
+app.get("/game", setAuth, (req, res) => {
+  res.render('game');
+})
 
 //회원가입
 app.post('/register', async (req, res) => {
@@ -95,29 +89,22 @@ app.post('/login', async (req, res) => {
 })
 
 
-//캐릭터 생성
+//플레이어 이름 등록
 app.post('/player/create', setAuth, async (req, res) => {
+    const user = req.user;
     try {
         var name = req.body.name
         var email = req.user.email
-        if (await Player.exists({ name })) {
+        if (await User.exists({ name })) {
             msg = "Player is already exists"
         } else {
-            const player = new Player({
-                name,
-                maxHP: 10,
-                HP: 10,
-                str: 5,
-                def: 5,
-                x: 0,
-                y: 0,
-                email
-            })
-            await player.save()
+            user.name = name
+            await user.save()
             msg = "Success"
         }
         res.status(200).json({ msg }) //임시 결과값
     } catch (error) {
+        console.log(error)
         res.status(400).json({ error: "DB_ERROR" })
     }
 })
@@ -149,65 +136,82 @@ app.get('/player/map/:name', setAuth ,async (req, res) => {
 })
 
 app.post("/action", setAuth, async (req, res) => {
-    const { action } = req.body;
-    const player = req.player;
-    let event = null;
-    let field = null;
-    let actions = [];
-    if (action === "query") {
-      field = mapManager.getField(req.player.x, req.player.y);
-    } else if (action === "move") {
-      const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
-      let x = req.player.x;
-      let y = req.player.y;
-      if (direction === 0) {
-        y -= 1;
-      } else if (direction === 1) {
-        x += 1;
-      } else if (direction === 2) {
-        y += 1;
-      } else if (direction === 3) {
-        x -= 1;
-      } else {
-        res.sendStatus(400);
-      }
-      field = mapManager.getField(x, y);
-      if (!field) res.sendStatus(400);
-      player.x = x;
-      player.y = y;
-  
-      const events = field.events;
-      const actions = [];
-      if (events.length > 0) {
-        // TODO : 확률별로 이벤트 발생하도록 변경
-        const _event = events[0];
-        if (_event.type === "battle") {
-          // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
-  
-          event = { description: "늑대와 마주쳐 싸움을 벌였다." };
-          player.incrementHP(-1);
-        } else if (_event.type === "item") {
-          event = { description: "포션을 획득해 체력을 회복했다." };
-          player.incrementHP(1);
-          player.HP = Math.min(player.maxHP, player.HP + 1);
+  const { action } = req.body;
+  const player = req.user;
+  let event = null;
+  let field = null;
+  let actions = [];
+  if (action === "query") {
+    field = mapManager.getField(player.x, player.y);
+  } else if (action === "move") {
+    const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
+    let x = player.x;
+    let y = player.y;
+    if (direction === 0) {
+      y -= 1;
+    } else if (direction === 1) {
+      x += 1;
+    } else if (direction === 2) {
+      y += 1;
+    } else if (direction === 3) {
+      x -= 1;
+    } else {
+      res.sendStatus(400);
+    }
+    field = mapManager.getField(x, y);
+    if (!field) res.sendStatus(400);
+    player.x = x;
+    player.y = y;
+
+    console.log('---------event---------')
+    const events = field.events;
+    // console.log(events)
+    const actions = [];
+    if (events.length > 0) {
+      // TODO [DONE]: 확률별로 이벤트 발생하도록 변경
+      let i;
+      let random = Math.ceil(Math.random() * 100);
+      // console.log(random)
+      for (i=0; i<events.length; i++) {
+        random = random - events[i].percent;
+        if (random <= 0) {
+          break;
         }
       }
-  
-      await player.save();
-    }
-  
-    field.canGo.forEach((direction, i) => {
-      if (direction === 1) {
-        actions.push({
-          url: "/action",
-          text: i,
-          params: { direction: i, action: "move" }
-        });
+      const _event = events[i];
+      console.log('Randomly chosen event:', _event)
+      if (_event.type === "battle") {
+        // TODO : 이벤트 별로 events.json 에서 불러와 이벤트 처리
+
+        // 둘 중 하나 죽을때가지 싸우고, event는 description이 적절히 리턴됨.
+        event = battle(_event, player);
+        if(player.HP <= 0) {
+          // TODO : 플레이어 사망
+        } else {
+          // TODO : 플레이어가 몬스터 죽임. 경험치 획득
+        }
+      } else if (_event.type === "item") {
+        event = { description: "포션을 획득해 체력을 회복했다." };
+        player.incrementHP(1);
+        player.HP = Math.min(player.maxHP, player.HP + 1);
       }
-    });
-  
-    return res.send({ player, field, event, actions });
+    }
+
+    await player.save();
+  }
+
+  field.canGo.forEach((direction, i) => {
+    if (direction === 1) {
+      actions.push({
+        url: "/action",
+        text: i,
+        params: { direction: i, action: "move" }
+      });
+    }
   });
+
+  return res.send({ player, field, event, actions });
+});
 
 
 //맵이동 (아이템획득시 스탯 업데이트, 도망가기)
