@@ -37,7 +37,7 @@ app.use("/static", express.static(path.join(__dirname, 'public')));
 //플레이어 선택, 생성 화면
 app.get('/', setAuth, async (req, res) => {
     var email = req.cookies.email;
-    // console.log(email)
+    // console.log(email);
     var players = await Player.find().where({ email })
     res.render("home", { data: { players } })
 })
