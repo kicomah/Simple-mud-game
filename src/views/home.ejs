@@ -12,36 +12,14 @@
 
 <body>
     <div class="home_wrap">
-        <div class="main_title">플레이어 선택</div>
 
-        <div class="card_list">
-            <% for (var i=0; i < data.players.length; i++) { %>
-                <div class="card" onclick="select_player(this)">
-                    <div id="unique" style="display: none;">
-                        <%= data.players[i].name %>
-                    </div>
-                    <div class="name">플레이어 : <%= data.players[i].name %>
-                    </div>
-                    <div class="level">레벨 : <%= data.players[i].level %>
-                    </div>
-                    <div class="level">체력 : <%= data.players[i].HP %>
-                    </div>
-                    <div class="level">공격력 : <%= data.players[i].str %>
-                    </div>
-                    <div class="level">방어력 : <%= data.players[i].def %>
-                    </div>
-                    <div class="level">위치 : (<%= data.players[i].x %>,<%= data.players[i].y %>)</div>
-                </div>
-                <% } %>
-        </div>
-
-        <div class="main_title">플레이어 생성</div>
+        <div class="main_title">플레이어 이름을 정해주세요.</div>
 
         <div class="">
             <div>
                 <input type="text" id="player_name" value="" size="40" style="height: 30px;"
                     placeholder="플레이어 명을 등록해주세요" />
-                <span class="create_btn" onclick="create_player()">생성</span>
+                <span class="create_btn" onclick="create_player()">등록</span>
             </div>
         </div>
     </div>
@@ -49,12 +27,15 @@
 
 
     <script>
-        const select_player = player => {
-            if (confirm('플레이어를 선택하시겠습니까?')) {
-                var name = player.childNodes[1].innerText
-                window.location.href = `/player/map/${name}`
-            }
-        }
+        // 불필요한 코드
+        // const select_player = player => {
+        //     if (confirm('플레이어를 선택하시겠습니까?')) {
+        //         var name = player.childNodes[1].innerText
+        //         window.location.href = `/player/map/${name}`
+        //     }
+        // }
+
+        // 플레이어 이름 등록
         const create_player = () => {
             var name = document.getElementById('player_name').value
             var key = localStorage.getItem('key')
