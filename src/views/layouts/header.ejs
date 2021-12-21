@@ -1,0 +1,36 @@
+<div style="display: flex; justify-content: space-between; border-bottom: 1px solid black; padding: 10px; margin-bottom: 10px;">
+    <div>
+        <div>
+            계정 정보: <%= data.user.email %>
+        </div>
+        <div>
+            플레이어 이름: <%= data.user.name %>
+        </div>
+    </div>
+    <div>
+        <div onclick="logout()" style="background-color: dodgerblue; color: white; padding: 10px; cursor: pointer;">
+            로그아웃
+        </div>
+    </div>
+</div>
+
+<script>
+    function logout() {
+        let confirmResult = confirm('정말 로그아웃 하시겠습니까?')
+        if (confirmResult) {
+            deleteAllCookies();
+            location.href = "/"
+        }
+    }
+
+    function deleteAllCookies() {
+        var cookies = document.cookie.split(";");
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+    }
+</script>

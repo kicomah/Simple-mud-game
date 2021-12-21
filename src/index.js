@@ -1,126 +1,292 @@
 const express = require("express");
-const fs = require("fs");
-const mongoose = require("mongoose");
-const crypto = require("crypto");
-
-const { constantManager, mapManager } = require("./datas/Manager");
-const { Player } = require("./models/Player");
-
 const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.set("views", __dirname + "/views");
-app.set("view engine", "ejs");
-app.engine("html", require("ejs").renderFile);
+const port = 3000;
+const path = require("path");
+const crypto = require("crypto");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cookieParser = require("cookie-parser");
+const { encryptPassword, setAuth } = require("./utils");
+const { constantManager, mapManager } = require("./datas/Manager");
+const fs = require("fs");
+const { User, Player } = require("./models");
+const { battle } = require("./utils/battle");
+const { pickItem } = require("./utils/pickItem");
+const { itemManager } = require("./datas/Manager");
+dotenv.config("./src");
 
-mongoose.connect(
-  "mongodb+srv://tester123:tester123@cluster0.ye4cg.mongodb.net/myFirstDatabase?",
-  { useNewUrlParser: true, useUnifiedTopology: true }
-);
-
-const authentication = async (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization) return res.sendStatus(401);
-  const [bearer, key] = authorization.split(" ");
-  if (bearer !== "Bearer") return res.sendStatus(401);
-  const player = await Player.findOne({ key });
-  if (!player) return res.sendStatus(401);
-
-  req.player = player;
-  next();
-};
-
-app.get("/", (req, res) => {
-  res.render("index", { gameName: constantManager.gameName });
-});
-
-app.get("/game", (req, res) => {
-  res.render("game");
-});
-
-app.post("/signup", async (req, res) => {
-  const { name } = req.body;
-
-  if (await Player.exists({ name })) {
-    return res.status(400).send({ error: "Player already exists" });
-  }
-
-  const player = new Player({
-    name,
-    maxHP: 10,
-    HP: 10,
-    str: 5,
-    def: 5,
-    x: 0,
-    y: 0
+//몽고 DB 연결
+// const mongoURL = process.env.MONGODB_URL
+mongoose
+  .connect(
+    "mongodb+srv://new-user0:asdfasdf@cluster0.jw1fm.mongodb.net/fp3?retryWrites=true&w=majority",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    }
+  )
+  .then(() => {
+    console.log("MongoDB connected!!!");
+  })
+  .catch((err) => {
+    console.log(
+      "MongoDB connection failed, plz check creation .env or check Mongdb_url in .env file"
+    );
   });
 
-  const key = crypto.randomBytes(24).toString("hex");
-  player.key = key;
+//json처리
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cookieParser());
 
-  await player.save();
+//뷰 엔진 (api 로그인,회원가입 기능 테스트 완료후 뷰 연결)
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
+app.use("/static", express.static(path.join(__dirname, "public")));
 
-  return res.send({ key });
+//플레이어 선택, 생성 화면
+app.get("/", setAuth, async (req, res) => {
+  var email = req.cookies.email;
+  if (req.user.name) {
+    res.redirect("/game");
+  } else {
+    res.render("home", { data: { user: req.user } });
+  }
 });
 
-app.post("/action", authentication, async (req, res) => {
+app.get("/game", setAuth, (req, res) => {
+  res.render("game", { data: { user: req.user } });
+});
+
+//회원가입
+app.post("/register", async (req, res) => {
+  const { email, password } = req.body;
+  const encryptedPassword = encryptPassword(password);
+  let user = null;
+  try {
+    user = new User({ email: email, password: encryptedPassword });
+    await user.save();
+  } catch (err) {
+    return res.status(400).json({ error: "email is duplicated" });
+  }
+  res.status(200).json({ _id: user._id });
+});
+
+//로그인 페이지
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+//로그인 로직
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  const encryptedPassword = encryptPassword(password);
+  const user = await User.findOne({ email, password: encryptedPassword });
+
+  if (user === null)
+    return res.status(403).json({ error: "email or password is invaild" });
+
+  user.key = encryptPassword(crypto.randomBytes(20));
+  let auth_key = `Bearer ${user.key}`;
+  res.cookie("authorization", auth_key, {
+    maxAge: 1000 * 60 * 30
+  });
+  res.cookie("email", email, {
+    maxAge: 1000 * 60 * 30
+  });
+  await user.save();
+  res.send({ data: auth_key });
+});
+
+//플레이어 이름 등록
+app.post("/player/create", setAuth, async (req, res) => {
+  const user = req.user;
+  var name = req.body.name;
+  var email = req.user.email;
+  try {
+    if (user.name) {
+      msg = "You already have a name";
+    } else if (await User.exists({ name })) {
+      msg = "Player is already exists";
+    } else {
+      user.name = name;
+      await user.save();
+      msg = "Success";
+    }
+    res.status(200).json({ msg }); //임시 결과값
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: "DB_ERROR" });
+  }
+});
+
+//플레이어 상태 확인
+app.get("/player/:name", setAuth, async (req, res) => {
+  try {
+    var name = req.params.name;
+    var player = await Player.findOne({ name });
+    var level = player.level;
+    var exp = player.exp;
+    var maxHP = player.maxHP;
+    var HP = player.HP;
+    var inventory = player.inventory;
+    var str = player.str;
+    var def = player.def;
+    var x = player.x;
+    var y = player.y;
+    res.status(200).json({ level, exp, maxHP, HP, inventory, str, def, x, y });
+  } catch (error) {
+    res.status(400).json({ error: "DB_ERROR" });
+  }
+});
+
+app.post("/action", setAuth, async (req, res) => {
   const { action } = req.body;
-  const player = req.player;
-  let event = null;
+  console.log(action);
+  const player = req.user;
+  let event = {};
   let field = null;
   let actions = [];
   if (action === "query") {
-    field = mapManager.getField(req.player.x, req.player.y);
-  } else if (action === "move") {
-    const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
-    let x = req.player.x;
-    let y = req.player.y;
-    if (direction === 0) {
-      y -= 1;
-    } else if (direction === 1) {
-      x += 1;
-    } else if (direction === 2) {
-      y += 1;
-    } else if (direction === 3) {
-      x -= 1;
-    } else {
-      res.sendStatus(400);
-    }
-    field = mapManager.getField(x, y);
-    if (!field) res.sendStatus(400);
-    player.x = x;
-    player.y = y;
+    field = mapManager.getField(player.x, player.y);
+  } else {
+    let _event = {};
+    if (action === "continueBattle") {
+      field = mapManager.getField(player.x, player.y);
+      console.log(field)
+      // 전투 event를 찾는다.
+      _event = field.events.filter(obj => {
+        return obj.type === 'battle';
+      })[0]
+    } else if (action === "move") {
+      const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
+      let x = player.x;
+      let y = player.y;
+      if (direction === 0) {
+        y -= 1;
+      } else if (direction === 1) {
+        x += 1;
+      } else if (direction === 2) {
+        y += 1;
+      } else if (direction === 3) {
+        x -= 1;
+      } else {
+        res.sendStatus(400);
+      }
+      field = mapManager.getField(x, y);
+      if (!field) res.sendStatus(400);
+      player.x = x;
+      player.y = y;
 
-    const events = field.events;
-    const actions = [];
-    if (events.length > 0) {
-      // TODO : 확률별로 이벤트 발생하도록 변경
-      const _event = events[0];
-      if (_event.type === "battle") {
-        // TODO: 이벤트 별로 events.json 에서 불러와 이벤트 처리
-
-        event = { description: "늑대와 마주쳐 싸움을 벌였다." };
-        player.incrementHP(-1);
-      } else if (_event.type === "item") {
-        event = { description: "포션을 획득해 체력을 회복했다." };
-        player.incrementHP(1);
-        player.HP = Math.min(player.maxHP, player.HP + 1);
+      console.log("---------event---------");
+      const events = field.events;
+      // console.log(events)
+      const actions = [];
+      if (events.length > 0) {
+        // 확률별로 이벤트 발생
+        let i;
+        let random = Math.ceil(Math.random() * 100);
+        // console.log(random)
+        for (i = 0; i < events.length; i++) {
+          random = random - events[i].percent;
+          if (random <= 0) {
+            break;
+          }
+        }
+        _event = events[i];
+        console.log("Randomly chosen event:", _event);
       }
     }
 
+    if (_event.type === "battle") {
+      // TODO : 이벤트 별로 events.json 에서 불러와 이벤트 처리
+
+      // 전투를 한다., event는 description이 적절히 리턴됨.
+      event = battle(_event, player);
+      // 사망 시스템
+      if (player.HP <= 0) {
+        event.result = `You die. (0,0)에서 부활합니다.`;
+        player.x = 0;
+        player.y = 0;
+        field = mapManager.getField(player.x, player.y);
+        player.HP = player.maxHP;
+        player._exp = 0;
+        // 사망시 랜덤하게 아이템을 잃어버린다.
+        const numberOfItems = player.inventory.length;
+        if (numberOfItems > 0) {
+          const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
+          let lostItem = player.inventory[randomInt];
+          if (lostItem === "나무목도") {   //아이템 잃어버리면 능력치 감소
+            player.str -= 1;
+          } else if (lostItem === "천갑옷") {
+            player._def -= 1;
+          } else if (lostItem === "강철검") {
+            player._str -= 4;
+          } else if (lostItem === "강철도끼") {
+            player._str -= 5;
+          } else if (lostItem === "강철갑옷") {
+            player._def -= 5;
+          }
+          player.inventory.splice(randomInt, 1);
+        }
+      } else {
+        // 전투가 끝난 것이라면
+        if (!event.pauseBattle) {
+          // 플레이어가 몬스터 죽임. 경험치 1 획득
+          player._exp += 1;
+          // 레벨 시스템
+          if (player._exp >= player.level * 5 + 5) {
+            event.result = "레벨업!";
+            player._exp -= player.level * 5 + 5;
+            player.level += 1;
+            player.maxHP += 1;
+            player.HP = player.maxHP;
+            player.str += 1;
+            player._def += 1;
+          }
+        // 전투가 일시중지된 것이라면
+        } else {
+          
+        }
+      }
+    } else if (_event.type === "item") {
+      event = pickItem(_event, player);
+      let item = itemManager.items.filter((obj) => {
+        return obj.id === _event.item;
+      })[0];
+      if (player.inventory.includes(item.name)) {
+        event.description = "이미 소유하고 있는 아이템입니다."
+      } else {
+        player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
+        if (item.str) {
+          player.str += item.str;  //아이템 획득시 능력치 향상
+        } else if (item.def) {
+          player._def += item.def;
+        }
+      }
+    }
     await player.save();
+
   }
+
+  const dirArray = ["북", "동", "남", "서"];
 
   field.canGo.forEach((direction, i) => {
     if (direction === 1) {
       actions.push({
         url: "/action",
-        text: i,
+        text: dirArray[i],
         params: { direction: i, action: "move" }
       });
     }
   });
 
   return res.send({ player, field, event, actions });
+  
 });
 
-app.listen(3000);
+
+//서버 포트 연결
+app.listen(port, () => {
+  console.log(`listening at port: ${port}...`);
+});
