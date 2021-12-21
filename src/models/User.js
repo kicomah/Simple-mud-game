@@ -8,12 +8,12 @@ const schema = new Schema({
   key: String, // 인증 해쉬값
 
   level: { type: Number, default: 1 },
-  exp: { type: Number, default: 0 },
+  _exp: { type: Number, default: 0 },
 
   maxHP: { type: Number, default: 10 },
   HP: { type: Number, default: 10 },
   str: { type: Number, default: 5 },
-  def: { type: Number, default: 5 },
+  _def: { type: Number, default: 5 },
   x: { type: Number, default: 0 },
   y: { type: Number, default: 0 }
 });

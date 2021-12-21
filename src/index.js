@@ -196,9 +196,25 @@ app.post("/action", setAuth, async (req, res) => {
         // 둘 중 하나 죽을때가지 싸우고, event는 description이 적절히 리턴됨.
         event = battle(_event, player);
         if (player.HP <= 0) {
-          // TODO : 플레이어 사망
+          // 사망 시스템
+          event = { description: "You die." };
+          player.x = 0;
+          player.y = 0;
+          player.HP = player.maxHP;
+          player._exp = 0;
         } else {
-          // TODO : 플레이어가 몬스터 죽임. 경험치 획득
+          // 플레이어가 몬스터 죽임. 경험치 1 획득
+          player._exp += 1;
+          // 레벨 시스템
+          if (player._exp >= player.level * 5 + 5) {
+            event = { description: "레벨업!" };
+            player._exp -= player.level * 5 + 5;
+            player.level += 1;
+            player.maxHP += 1;
+            player.HP = player.maxHP;
+            player.str += 1;
+            player._def += 1;
+          }
         }
       } else if (_event.type === "item") {
         event = pickItem(_event, player);

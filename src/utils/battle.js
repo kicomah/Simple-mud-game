@@ -7,8 +7,8 @@ const battle = (_event, player) => {
   let playerHP = player.HP;
   console.log('몬스터:', monster)
   while (playerHP > 0 && monsterHP > 0) {
-    monsterHP -= (player.str/monster.def);
-    playerHP -= (monster.str/player.def);
+    monsterHP -= (player.str/monster._def);
+    playerHP -= (monster.str/player._def);
   }
   console.log('플레이어HP:', playerHP)
   player.incrementHP(playerHP - player.HP);
