@@ -243,41 +243,6 @@ app.post("/action", setAuth, async (req, res) => {
 
 //전투 or 도망
 
-//레벨업 (1업 마다 능력치 모두 1상승)
-app.post("/player/levelup/:name", setAuth, async (req, res) => {
-  const name = req.params.name;
-  const player = await Player.findOne({ name });
-  while (player.exp >= 3) {
-    player.level += 1;
-    player.maxHP += 1;
-    player.HP = player.maxHP;
-    player.str += 1;
-    player.def += 1;
-    player.exp -= 3;
-    await player.save();
-  }
-});
-
-//사망 (게임 처음부터 시작)
-app.get("/player/death/:name", setAuth, async (req, res) => {
-  try {
-    var name = req.params.name;
-    var player = await Player.findOne({ name });
-    player.level = 1;
-    player.exp = 0;
-    player.maxHP = 10;
-    player.HP = 10;
-    player.str = 5;
-    player.def = 5;
-    player.x = 0;
-    player.y = 0;
-    await player.save();
-    res.status(200).json({ msg: "death" });
-  } catch (error) {
-    res.status(400).json({ error: "DB_ERROR" });
-  }
-});
-
 //서버 포트 연결
 app.listen(port, () => {
   console.log(`listening at port: ${port}...`);
