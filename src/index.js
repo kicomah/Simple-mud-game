@@ -48,7 +48,7 @@ const setPlayer = async (req, res, next) => {
 //플레이어 선택, 생성 화면
 app.get('/', setAuth, async (req, res) => {
     var email = req.cookies.email;
-    // console.log(email)
+    // console.log(email);
     var players = await Player.find().where({ email })
     res.render("home", { data: { players } })
 })
@@ -217,7 +217,19 @@ app.post("/action", setAuth, async (req, res) => {
 
 
 //레벨업 (1업 마다 능력치 모두 1상승)
-
+app.post('/player/levelup/:name', setAuth, async (req, res) => {
+    const name = req.params.name;
+    const player = await Player.findOne({ name });
+    while (player.exp >= 3) {
+        player.level += 1;
+        player.maxHP += 1;
+        player.HP = player.maxHP;
+        player.str += 1;
+        player.def += 1;
+        player.exp -= 3;
+        await player.save();
+    }
+})
 
 //사망 (게임 처음부터 시작)
 app.get('/player/death/:name', setAuth, async (req, res) => {

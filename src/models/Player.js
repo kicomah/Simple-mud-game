@@ -2,11 +2,12 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
+  email: String,
   name: String,
   key: String,
 
-  level: Number,
-  exp: Number,
+  level: { type: Number, default: 1 },
+  exp: { type: Number, default: 0 },
 
   maxHP: { type: Number, default: 10 },
   HP: { type: Number, default: 10 },
