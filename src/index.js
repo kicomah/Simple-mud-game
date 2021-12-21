@@ -40,12 +40,12 @@ app.get('/', setAuth, async (req, res) => {
     if(req.user.name) {
       res.redirect("/game")
     } else {
-      res.render("home")
+      res.render("home", {data: { user: req.user }})
     }
 })
 
 app.get("/game", setAuth, (req, res) => {
-  res.render('game');
+  res.render('game', {data: { user: req.user }});
 })
 
 //회원가입
