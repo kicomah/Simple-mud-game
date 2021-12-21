@@ -92,10 +92,12 @@ app.post('/login', async (req, res) => {
 //플레이어 이름 등록
 app.post('/player/create', setAuth, async (req, res) => {
     const user = req.user;
+    var name = req.body.name
+    var email = req.user.email
     try {
-        var name = req.body.name
-        var email = req.user.email
-        if (await User.exists({ name })) {
+        if (user.name) {
+          msg = "You already have a name"
+        } else if (await User.exists({ name })) {
             msg = "Player is already exists"
         } else {
             user.name = name
