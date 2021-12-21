@@ -202,11 +202,13 @@ app.post("/action", setAuth, async (req, res) => {
     await player.save();
   }
 
+  const dirArray = ["북", "동", "남", "서"];
+
   field.canGo.forEach((direction, i) => {
     if (direction === 1) {
       actions.push({
         url: "/action",
-        text: i,
+        text: dirArray[i],
         params: { direction: i, action: "move" }
       });
     }
