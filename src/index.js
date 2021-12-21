@@ -33,6 +33,17 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use("/static", express.static(path.join(__dirname, 'public')));
 
+const setPlayer = async (req, res, next) => {
+    const { authorization } = req.headers;
+    if (!authorization) return res.sendStatus(401);
+    const [bearer, key] = authorization.split(" ");
+    if (bearer !== "Bearer") return res.sendStatus(401);
+    const player = await Player.findOne({ key });
+    if (!player) return res.sendStatus(401);
+
+    req.player = player;
+    next();
+};
 
 //플레이어 선택, 생성 화면
 app.get('/', setAuth, async (req, res) => {
