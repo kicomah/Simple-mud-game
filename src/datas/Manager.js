@@ -39,6 +39,14 @@ class MonsterManager extends Manager {
     this.monsters = datas;
   }
 }
+
+class ItemManager extends Manager {
+  constructor(datas) {
+    super();
+    this.items = datas;
+  }
+}
+
 const constantManager = new ConstantManager(
   JSON.parse(fs.readFileSync(__dirname + "/constants.json"))
 );
@@ -49,10 +57,15 @@ const mapManager = new MapManager(
 
 const monsterManager = new MonsterManager(
   JSON.parse(fs.readFileSync(__dirname + "/monsters.json"))
-)
+);
+
+const itemManager = new ItemManager(
+  JSON.parse(fs.readFileSync(__dirname + "/items.json"))
+);
 
 module.exports = {
   constantManager,
   mapManager,
   monsterManager,
+  itemManager
 };
