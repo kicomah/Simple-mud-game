@@ -110,6 +110,10 @@ app.post("/player/create", setAuth, async (req, res) => {
       msg = "Player is already exists";
     } else {
       user.name = name;
+      user.maxHP = Math.floor(Math.random() * (Math.floor(21) - Math.ceil(10))) + 10;
+      user.HP = user.maxHP;
+      user.str = Math.floor(Math.random() * (Math.floor(16) - Math.ceil(5))) + 5;
+      user._def = Math.floor(Math.random() * (Math.floor(16) - Math.ceil(5))) + 5;
       await user.save();
       msg = "Success";
     }
