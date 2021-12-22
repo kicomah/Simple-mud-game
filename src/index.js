@@ -153,11 +153,11 @@ app.post("/action", setAuth, async (req, res) => {
     let _event = {};
     if (action === "continueBattle") {
       field = mapManager.getField(player.x, player.y);
-      console.log(field)
+      console.log(field);
       // 전투 event를 찾는다.
-      _event = field.events.filter(obj => {
-        return obj.type === 'battle';
-      })[0]
+      _event = field.events.filter((obj) => {
+        return obj.type === "battle";
+      })[0];
     } else if (action === "move") {
       const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
       let x = player.x;
@@ -216,12 +216,11 @@ app.post("/action", setAuth, async (req, res) => {
         if (numberOfItems > 0) {
           const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
           let lostItem = player.inventory[randomInt];
-          if (lostItem === "나무목도") {   //아이템 잃어버리면 능력치 감소
+          if (lostItem === "나무목도") {
+            //아이템 잃어버리면 능력치 감소
             player.str -= 1;
           } else if (lostItem === "천갑옷") {
             player._def -= 1;
-          } else if (lostItem === "강철검") {
-            player._str -= 4;
           } else if (lostItem === "강철도끼") {
             player._str -= 5;
           } else if (lostItem === "강철갑옷") {
@@ -244,9 +243,8 @@ app.post("/action", setAuth, async (req, res) => {
             player.str += 1;
             player._def += 1;
           }
-        // 전투가 일시중지된 것이라면
+          // 전투가 일시중지된 것이라면
         } else {
-          
         }
       }
     } else if (_event.type === "item") {
@@ -255,18 +253,25 @@ app.post("/action", setAuth, async (req, res) => {
         return obj.id === _event.item;
       })[0];
       if (player.inventory.includes(item.name)) {
-        event.description = "이미 소유하고 있는 아이템입니다."
+        event.description = "이미 소유하고 있는 아이템입니다.";
       } else {
-        player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
-        if (item.str) {
-          player.str += item.str;  //아이템 획득시 능력치 향상
-        } else if (item.def) {
-          player._def += item.def;
+        if (item.name === "체력 포션" && player.HP === player.maxHP) {  //포션은 획득시 즉시 회복하거나, 체력이 이미 최대면 버림. 
+          event.description = "포션을 주웠으나 이미 체력이 최대입니다.";
+        } else if (item.name === "체력 포션" && player.HP !== player.maxHP) {
+          event.description = "포션을 획득해 체력을 회복했다.";
+          player.incrementHP(1);
+          player.HP = Math.min(player.maxHP, player.HP);
+        } else {
+          player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
+          if (item.str) {
+            player.str += item.str; //아이템 획득시 능력치 향상
+          } else if (item.def) {
+            player._def += item.def;
+          }
         }
       }
     }
     await player.save();
-
   }
 
   const dirArray = ["북", "동", "남", "서"];
@@ -282,9 +287,7 @@ app.post("/action", setAuth, async (req, res) => {
   });
 
   return res.send({ player, field, event, actions });
-  
 });
-
 
 //서버 포트 연결
 app.listen(port, () => {
