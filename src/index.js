@@ -254,11 +254,15 @@ app.post("/action", setAuth, async (req, res) => {
       let item = itemManager.items.filter((obj) => {
         return obj.id === _event.item;
       })[0];
-      player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
-      if (item.str) {
-        player.str += item.str;  //아이템 획득시 능력치 향상
-      } else if (item.def) {
-        player._def += item.def;
+      if (player.inventory.includes(item.name)) {
+        event.description = "이미 소유하고 있는 아이템입니다."
+      } else {
+        player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
+        if (item.str) {
+          player.str += item.str;  //아이템 획득시 능력치 향상
+        } else if (item.def) {
+          player._def += item.def;
+        }
       }
     }
     await player.save();
@@ -281,9 +285,6 @@ app.post("/action", setAuth, async (req, res) => {
   
 });
 
-//맵이동 (아이템획득시 스탯 업데이트, 도망가기)
-
-//전투 or 도망
 
 //서버 포트 연결
 app.listen(port, () => {
