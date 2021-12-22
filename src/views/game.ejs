@@ -32,10 +32,17 @@
         <div id="event_result"></div>
         <div id="event_continue_battle"></div>
         <div id="control">
-          <button value="1">동</button>
-          <button value="3">서</button>
-          <button value="2">남</button>
-          <button value="0">북</button>
+          <div id="control1">
+            <div id="북"></div>
+          </div>
+          <div id="control2">
+            <div id="서"></div>
+            <div id="동"></div>
+          </div>
+          <div id="control3">
+            <div id="남"></div>
+          </div>
+
         </div>
       </div>
 
@@ -53,7 +60,6 @@
         }
         insertTr += '</tr>';
       }
-      document.write('</table>');
 
       $('#map').append(insertTr);
     }
@@ -83,15 +89,18 @@
         const locationId = `(${y}, ${x})`;
         document.getElementById(locationId).style.backgroundColor = 'gray';
 
-        $('#control').html('');
         res.actions.forEach((action) => {
-          const dom = $('<button></button>');
-          dom.text(action.text);
+          const dirr = action.text;
+          $(`#${dirr}`).html('');
+          const btnHTML = `<button></button>`
+          console.log(btnHTML);
+          const dom = $(btnHTML);
+          dom.text(dirr);
           dom.bind('click', function () {
             sendAction(action.url, action.params);
           });
 
-          $('#control').append(dom);
+          $(`#${dirr}`).append(dom);
         })
 
         $('#event_continue_battle').html('');
