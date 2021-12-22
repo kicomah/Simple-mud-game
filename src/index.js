@@ -205,7 +205,7 @@ app.post("/action", setAuth, async (req, res) => {
       event = battle(_event, player);
       // 사망 시스템
       if (player.HP <= 0) {
-        event.result = `${event.description} You die. (0,0)에서 부활합니다.`;
+        event.result = `You die. (0,0)에서 부활합니다.`;
         player.x = 0;
         player.y = 0;
         field = mapManager.getField(player.x, player.y);
@@ -215,6 +215,18 @@ app.post("/action", setAuth, async (req, res) => {
         const numberOfItems = player.inventory.length;
         if (numberOfItems > 0) {
           const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
+          let lostItem = player.inventory[randomInt];
+          if (lostItem === "나무목도") {   //아이템 잃어버리면 능력치 감소
+            player.str -= 1;
+          } else if (lostItem === "천갑옷") {
+            player._def -= 1;
+          } else if (lostItem === "강철검") {
+            player._str -= 4;
+          } else if (lostItem === "강철도끼") {
+            player._str -= 5;
+          } else if (lostItem === "강철갑옷") {
+            player._def -= 5;
+          }
           player.inventory.splice(randomInt, 1);
         }
       } else {
@@ -242,11 +254,15 @@ app.post("/action", setAuth, async (req, res) => {
       let item = itemManager.items.filter((obj) => {
         return obj.id === _event.item;
       })[0];
-      player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
-      if (item.str) {
-        player.str += item.str;  //아이템 획득시 능력치 향상
-      } else if (item.def) {
-        player._def += item.def;
+      if (player.inventory.includes(item.name)) {
+        event.description = "이미 소유하고 있는 아이템입니다."
+      } else {
+        player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
+        if (item.str) {
+          player.str += item.str;  //아이템 획득시 능력치 향상
+        } else if (item.def) {
+          player._def += item.def;
+        }
       }
     }
     await player.save();
@@ -269,9 +285,6 @@ app.post("/action", setAuth, async (req, res) => {
   
 });
 
-//맵이동 (아이템획득시 스탯 업데이트, 도망가기)
-
-//전투 or 도망
 
 //서버 포트 연결
 app.listen(port, () => {
