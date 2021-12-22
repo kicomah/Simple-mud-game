@@ -12,6 +12,7 @@ const fs = require("fs");
 const { User, Player } = require("./models");
 const { battle } = require("./utils/battle");
 const { pickItem } = require("./utils/pickItem");
+const { itemManager } = require("./datas/Manager");
 dotenv.config("./src");
 
 //몽고 DB 연결
@@ -128,11 +129,12 @@ app.get("/player/:name", setAuth, async (req, res) => {
     var exp = player.exp;
     var maxHP = player.maxHP;
     var HP = player.HP;
+    var inventory = player.inventory;
     var str = player.str;
     var def = player.def;
     var x = player.x;
     var y = player.y;
-    res.status(200).json({ level, exp, maxHP, HP, str, def, x, y });
+    res.status(200).json({ level, exp, maxHP, HP, inventory, str, def, x, y });
   } catch (error) {
     res.status(400).json({ error: "DB_ERROR" });
   }
@@ -218,6 +220,15 @@ app.post("/action", setAuth, async (req, res) => {
         }
       } else if (_event.type === "item") {
         event = pickItem(_event, player);
+        let item = itemManager.items.filter((obj) => {
+          return obj.id === _event.item;
+        })[0];
+        player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
+        if (item.str) {
+          player.str += item.str;  //아이템 획득시 능력치 향상
+        } else if (item.def) {
+          player._def += item.def;
+        }
       }
     }
 

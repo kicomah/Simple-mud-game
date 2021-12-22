@@ -17,6 +17,7 @@
       레벨: <span id="level"> 1</span><br>
       경험치: <span id="_exp"> 0 / 7</span><br>
       HP: <span id="HP"> 10 / 10</span><br>
+      인벤토리 현황: <span id="inventory"></span><br>
       공격력: <span id="str"> 5</span><br>
       방어력: <span id="_def"> 5</span>
     </div>
@@ -66,6 +67,7 @@
         $('#level').text(`${player.level}`)
         $('#_exp').text(`${player._exp} / ${player.level * 5 + 5}`)
         $('#HP').text(`${player.HP} / ${player.maxHP}`)
+        $('#inventory').text(`${player.inventory}`)
         $('#str').text(`${player.str}`)
         $('#_def').text(`${player._def}`)
       });

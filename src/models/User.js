@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
-  email: {type: String, unique: true, },//이메일
+  email: { type: String, unique: true }, //이메일
   password: String, //패스워드
   name: String,
   key: String, // 인증 해쉬값
@@ -12,6 +12,7 @@ const schema = new Schema({
 
   maxHP: { type: Number, default: 10 },
   HP: { type: Number, default: 10 },
+  inventory: { type: Array, default: [] },
   str: { type: Number, default: 5 },
   _def: { type: Number, default: 5 },
   x: { type: Number, default: 0 },
