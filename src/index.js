@@ -197,13 +197,20 @@ app.post("/action", setAuth, async (req, res) => {
 
         // 둘 중 하나 죽을때가지 싸우고, event는 description이 적절히 리턴됨.
         event = battle(_event, player);
+        // 사망 시스템
         if (player.HP <= 0) {
-          // 사망 시스템
-          event = { description: "You die." };
+          event.description = `${event.description} You die. (0,0)에서 부활합니다.`;
           player.x = 0;
           player.y = 0;
+          field = mapManager.getField(player.x, player.y);
           player.HP = player.maxHP;
           player._exp = 0;
+          // 사망시 랜덤하게 아이템을 잃어버린다.
+          const numberOfItems = player.inventory.length;
+          if (numberOfItems > 0) {
+            const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
+            player.inventory.splice(randomInt, 1);
+          }
         } else {
           // 플레이어가 몬스터 죽임. 경험치 1 획득
           player._exp += 1;
