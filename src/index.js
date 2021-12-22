@@ -46,9 +46,12 @@ app.use("/static", express.static(path.join(__dirname, "public")));
 
 //플레이어 선택, 생성 화면
 app.get("/", setAuth, async (req, res) => {
-  var email = req.cookies.email;
   if (req.user.name) {
-    res.redirect("/game");
+    if (req.user.trial >= 0) {
+      res.redirect("/setup")
+    } else {
+      res.redirect("/game");
+    }
   } else {
     res.render("home", { data: { user: req.user } });
   }
@@ -102,7 +105,6 @@ app.post("/login", async (req, res) => {
 app.post("/player/create", setAuth, async (req, res) => {
   const user = req.user;
   var name = req.body.name;
-  var email = req.user.email;
   try {
     if (user.name) {
       msg = "You already have a name";
@@ -123,6 +125,38 @@ app.post("/player/create", setAuth, async (req, res) => {
     res.status(400).json({ error: "DB_ERROR" });
   }
 });
+
+// 플레이어 능력치 뽑기
+app.get("/setup", setAuth, async (req, res) => {
+  const user = req.user;
+  if (user.trial >= 0) {
+    res.render('setup', {data: {user}})
+  } else {
+    res.redirect('/')
+  }
+});
+
+app.post("/setup", setAuth, async (req, res) => {
+  const user = req.user;
+  if (user.trial > 0) {
+    user.maxHP = Math.floor(Math.random() * (Math.floor(21) - Math.ceil(10))) + 10;
+    user.HP = user.maxHP;
+    user.str = Math.floor(Math.random() * (Math.floor(16) - Math.ceil(5))) + 5;
+    user._def = Math.floor(Math.random() * (Math.floor(16) - Math.ceil(5))) + 5;
+    user.trial -= 1;
+    await user.save();
+    res.send({user})
+  } else {
+    res.send({user})
+  }
+})
+
+app.post("/confirm", setAuth, async (req, res) => {
+  const user = req.user;
+  user.trial = -1;
+  await user.save();
+  res.redirect('/game')
+})
 
 //플레이어 상태 확인
 app.get("/player/:name", setAuth, async (req, res) => {

@@ -15,6 +15,8 @@ const schema = new Schema({
   inventory: { type: Array, default: [] },
   str: { type: Number, default: 5 },
   _def: { type: Number, default: 5 },
+  trial: { type: Number, default: 5},
+
   x: { type: Number, default: 0 },
   y: { type: Number, default: 0 }
 });
