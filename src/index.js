@@ -149,8 +149,9 @@ app.get("/player/map/:name", setAuth, async (req, res) => {
 
 app.post("/action", setAuth, async (req, res) => {
   const { action } = req.body;
+  console.log(action);
   const player = req.user;
-  let event = null;
+  let event = {};
   let field = null;
   let actions = [];
   if (action === "query") {
@@ -199,7 +200,7 @@ app.post("/action", setAuth, async (req, res) => {
         event = battle(_event, player);
         if (player.HP <= 0) {
           // 사망 시스템
-          event = { description: "You die." };
+          event.result = "You die.";
           player.x = 0;
           player.y = 0;
           player.HP = player.maxHP;
@@ -209,7 +210,7 @@ app.post("/action", setAuth, async (req, res) => {
           player._exp += 1;
           // 레벨 시스템
           if (player._exp >= player.level * 5 + 5) {
-            event = { description: "레벨업!" };
+            event.result = "레벨업!";
             player._exp -= player.level * 5 + 5;
             player.level += 1;
             player.maxHP += 1;
@@ -230,10 +231,12 @@ app.post("/action", setAuth, async (req, res) => {
           player._def += item.def;
         }
       }
+    } else {
+      event.result = ""
     }
 
     await player.save();
-  }
+    }
 
   const dirArray = ["북", "동", "남", "서"];
 
@@ -248,6 +251,7 @@ app.post("/action", setAuth, async (req, res) => {
   });
 
   return res.send({ player, field, event, actions });
+  
 });
 
 //맵이동 (아이템획득시 스탯 업데이트, 도망가기)

@@ -22,6 +22,7 @@
       방어력: <span id="_def"> 5</span>
     </div>
     <div id="game"></div>
+    <div id="event_description"></div>
     <div id="event_result"></div>
     <div id="control">
       <button value="1">동</button>
@@ -60,9 +61,16 @@
         })
 
         if (event) {
-          $('#event_result').text(event.description);
-        } else {
-          $('#event_result').text("아무일도 일어나지 않았다.");
+          if (event.description) {
+            $('#event_description').text(event.description);
+          } else {
+            $('#event_description').text("아무일도 일어나지 않았다.");
+          }
+          if (event.result) {
+            $('#event_result').text(event.result);
+          } else {
+            $('#event_result').text("");
+          }
         }
         $('#level').text(`${player.level}`)
         $('#_exp').text(`${player._exp} / ${player.level * 5 + 5}`)
