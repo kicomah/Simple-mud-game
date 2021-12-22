@@ -140,13 +140,6 @@ app.get("/player/:name", setAuth, async (req, res) => {
   }
 });
 
-//맵 화면
-app.get("/player/map/:name", setAuth, async (req, res) => {
-  var name = req.params.name;
-  var player = await Player.findOne({ name });
-  res.render("game", { data: { player } });
-});
-
 app.post("/action", setAuth, async (req, res) => {
   const { action } = req.body;
   console.log(action);
@@ -157,7 +150,7 @@ app.post("/action", setAuth, async (req, res) => {
   if (action === "query") {
     field = mapManager.getField(player.x, player.y);
   } else {
-    let _event = null;
+    let _event = {};
     if (action === "continueBattle") {
       field = mapManager.getField(player.x, player.y);
       console.log(field)
