@@ -90,13 +90,14 @@
         const locationId = `(${y}, ${x})`;
         document.getElementById(locationId).style.backgroundColor = 'gray';
 
+        // 버튼 초기화
         $('#동').html('');
         $('#서').html('');
         $('#남').html('');
         $('#북').html('');
+        // 버튼 생성
         res.actions.forEach((action) => {
           const dirr = action.text;
-          // $(`#${dirr}`).html('');
           const btnHTML = `<button></button>`
           const dom = $(btnHTML);
           dom.text(dirr);
