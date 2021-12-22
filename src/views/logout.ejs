@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/static/style/login.css" rel="stylesheet">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <title>Login</title>
+</head>
+
+<body>
+    <div style="padding: 20px;">
+        <div style="width: 100px; padding: 10px; text-align: center;">
+            <div onclick="logout()" style="background-color: dodgerblue; color: white; padding: 10px; cursor: pointer;">
+                로그아웃
+            </div>
+        </div>
+        <div>
+            <%= error %>
+        </div>
+        <div>
+            유저 인증 과정에 문제가 생겼습니다. 로그아웃 버튼을 눌러 쿠키를 삭제하세요.
+        </div>
+    </div>
+</body>
+
+<script>
+    function logout() {
+        let confirmResult = confirm('정말 로그아웃 하시겠습니까?')
+        if (confirmResult) {
+            deleteAllCookies();
+            location.href = "/"
+        }
+    }
+
+    function deleteAllCookies() {
+        var cookies = document.cookie.split(";");
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+    }
+</script>

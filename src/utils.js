@@ -16,11 +16,11 @@ const setAuth = async (req, res, next) => {
     // authorization이 존재하고 1자 이상의 문자열이면 key를 알아낸 뒤 user를 req에 정의합니다.
     const [bearer, key] = authorization.split(' ');
     if (bearer !== 'Bearer') {
-        return res.send({error: 'Wrong Authorization'}).status(400);
+        return res.send('logout', {error: 'Wrong Authorization'});
     } else {
         const user = await User.findOne({ key });
         if (!user) {
-            return res.send({error: 'Cannot find user'}).status(404);
+            return res.render('logout', {error: 'Cannot find user'});
         } else {
             req.user = user;
             return next();
