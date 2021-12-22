@@ -62,7 +62,7 @@
                 let key = res.data.key
                 localStorage.setItem("_key", key);
                 alert('로그인 성공!')
-                window.location = "http://localhost:3000/"
+                window.location = "/"
             }).catch(err => {
                 alert('이메일 또는 패스워드 불일치')
                 console.log(err)
