@@ -25,7 +25,7 @@
         <button onclick="random_trial()">재시도 (<span id="trial"><%= data.user.trial %></span>)</button>
     </div>
     <div>
-        <button onclick="confirm()">확정</button>
+        <button onclick="confirm_setup()">확정</button>
     </div>
 
   <script>
@@ -42,7 +42,7 @@
             console.log(err)
         })
     }
-    const confirm = () => {
+    const confirm_setup = () => {
         axios.post('/confirm')
         .then(res => {
             alert('초기 능력치 저장 완료!')
