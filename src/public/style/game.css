@@ -32,18 +32,21 @@ body {
 
 #control1 {
     width: 90px;
+    height: 30px;
     display: flex;
     justify-content: center;
 }
 
 #control2 {
     width: 90px;
+    height: 30px;
     display: flex;
     justify-content: space-between;
 }
 
 #control3 {
     width: 90px;
+    height: 30px;
     display: flex;
     justify-content: center;
 }
