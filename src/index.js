@@ -156,64 +156,78 @@ app.post("/action", setAuth, async (req, res) => {
   let actions = [];
   if (action === "query") {
     field = mapManager.getField(player.x, player.y);
-  } else if (action === "move") {
-    const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
-    let x = player.x;
-    let y = player.y;
-    if (direction === 0) {
-      y -= 1;
-    } else if (direction === 1) {
-      x += 1;
-    } else if (direction === 2) {
-      y += 1;
-    } else if (direction === 3) {
-      x -= 1;
-    } else {
-      res.sendStatus(400);
-    }
-    field = mapManager.getField(x, y);
-    if (!field) res.sendStatus(400);
-    player.x = x;
-    player.y = y;
-
-    console.log("---------event---------");
-    const events = field.events;
-    // console.log(events)
-    const actions = [];
-    if (events.length > 0) {
-      // TODO [DONE]: 확률별로 이벤트 발생하도록 변경
-      let i;
-      let random = Math.ceil(Math.random() * 100);
-      // console.log(random)
-      for (i = 0; i < events.length; i++) {
-        random = random - events[i].percent;
-        if (random <= 0) {
-          break;
-        }
+  } else {
+    let _event = null;
+    if (action === "continueBattle") {
+      field = mapManager.getField(player.x, player.y);
+      console.log(field)
+      // 전투 event를 찾는다.
+      _event = field.events.filter(obj => {
+        return obj.type === 'battle';
+      })[0]
+    } else if (action === "move") {
+      const direction = parseInt(req.body.direction, 0); // 0 북. 1 동 . 2 남. 3 서.
+      let x = player.x;
+      let y = player.y;
+      if (direction === 0) {
+        y -= 1;
+      } else if (direction === 1) {
+        x += 1;
+      } else if (direction === 2) {
+        y += 1;
+      } else if (direction === 3) {
+        x -= 1;
+      } else {
+        res.sendStatus(400);
       }
-      const _event = events[i];
-      console.log("Randomly chosen event:", _event);
-      if (_event.type === "battle") {
-        // TODO : 이벤트 별로 events.json 에서 불러와 이벤트 처리
+      field = mapManager.getField(x, y);
+      if (!field) res.sendStatus(400);
+      player.x = x;
+      player.y = y;
 
-        // 둘 중 하나 죽을때가지 싸우고, event는 description이 적절히 리턴됨.
-        event = battle(_event, player);
-        // 사망 시스템
-        if (player.HP <= 0) {
-          // 사망 시스템
-          event.result = `${event.description} You die. (0,0)에서 부활합니다.`;
-          player.x = 0;
-          player.y = 0;
-          field = mapManager.getField(player.x, player.y);
-          player.HP = player.maxHP;
-          player._exp = 0;
-          // 사망시 랜덤하게 아이템을 잃어버린다.
-          const numberOfItems = player.inventory.length;
-          if (numberOfItems > 0) {
-            const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
-            player.inventory.splice(randomInt, 1);
+      console.log("---------event---------");
+      const events = field.events;
+      // console.log(events)
+      const actions = [];
+      if (events.length > 0) {
+        // 확률별로 이벤트 발생
+        let i;
+        let random = Math.ceil(Math.random() * 100);
+        // console.log(random)
+        for (i = 0; i < events.length; i++) {
+          random = random - events[i].percent;
+          if (random <= 0) {
+            break;
           }
-        } else {
+        }
+        _event = events[i];
+        console.log("Randomly chosen event:", _event);
+      }
+    }
+
+    if (_event.type === "battle") {
+      // TODO : 이벤트 별로 events.json 에서 불러와 이벤트 처리
+
+      // 전투를 한다., event는 description이 적절히 리턴됨.
+      event = battle(_event, player);
+      // 사망 시스템
+      if (player.HP <= 0) {
+        // 사망 시스템
+        event.result = `${event.description} You die. (0,0)에서 부활합니다.`;
+        player.x = 0;
+        player.y = 0;
+        field = mapManager.getField(player.x, player.y);
+        player.HP = player.maxHP;
+        player._exp = 0;
+        // 사망시 랜덤하게 아이템을 잃어버린다.
+        const numberOfItems = player.inventory.length;
+        if (numberOfItems > 0) {
+          const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
+          player.inventory.splice(randomInt, 1);
+        }
+      } else {
+        // 전투가 끝난 것이라면
+        if (!event.pauseBattle) {
           // 플레이어가 몬스터 죽임. 경험치 1 획득
           player._exp += 1;
           // 레벨 시스템
@@ -226,25 +240,26 @@ app.post("/action", setAuth, async (req, res) => {
             player.str += 1;
             player._def += 1;
           }
-        }
-      } else if (_event.type === "item") {
-        event = pickItem(_event, player);
-        let item = itemManager.items.filter((obj) => {
-          return obj.id === _event.item;
-        })[0];
-        player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
-        if (item.str) {
-          player.str += item.str;  //아이템 획득시 능력치 향상
-        } else if (item.def) {
-          player._def += item.def;
+        // 전투가 일시중지된 것이라면
+        } else {
+          
         }
       }
-    } else {
-      event.result = ""
+    } else if (_event.type === "item") {
+      event = pickItem(_event, player);
+      let item = itemManager.items.filter((obj) => {
+        return obj.id === _event.item;
+      })[0];
+      player.inventory.push(item.name); //아이템 획득시 인벤토리에 추가
+      if (item.str) {
+        player.str += item.str;  //아이템 획득시 능력치 향상
+      } else if (item.def) {
+        player._def += item.def;
+      }
     }
-
     await player.save();
-    }
+
+  }
 
   const dirArray = ["북", "동", "남", "서"];
 

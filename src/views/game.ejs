@@ -24,6 +24,7 @@
     <div id="game"></div>
     <div id="event_description"></div>
     <div id="event_result"></div>
+    <div id="event_continue_battle"></div>
     <div id="control">
       <button value="1">동</button>
       <button value="3">서</button>
@@ -59,6 +60,16 @@
 
           $('#control').append(dom);
         })
+
+        $('#event_continue_battle').html('');
+        if (res.event.pauseBattle) {
+          const dom = $('<button>전투 재개</button>');
+          dom.bind('click', function () {
+            sendAction("/action", { action: 'continueBattle'});
+          });
+
+          $('#event_continue_battle').append(dom);
+        }
 
         if (event) {
           if (event.description) {
