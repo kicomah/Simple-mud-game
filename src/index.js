@@ -205,7 +205,6 @@ app.post("/action", setAuth, async (req, res) => {
       event = battle(_event, player);
       // 사망 시스템
       if (player.HP <= 0) {
-        // 사망 시스템
         event.result = `${event.description} You die. (0,0)에서 부활합니다.`;
         player.x = 0;
         player.y = 0;

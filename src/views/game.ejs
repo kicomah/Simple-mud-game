@@ -10,29 +10,52 @@
 
   <body>
     <%- include('layouts/header') -%>
+    <div id="container">
+      <table id="map" border="1px"></table>
 
-    <div id="position"></div>
+      <div id="position"></div>
 
-    <div id="status">
-      레벨: <span id="level"> 1</span><br>
-      경험치: <span id="_exp"> 0 / 7</span><br>
-      HP: <span id="HP"> 10 / 10</span><br>
-      인벤토리 현황: <span id="inventory"></span><br>
-      공격력: <span id="str"> 5</span><br>
-      방어력: <span id="_def"> 5</span>
+      <div id="status">
+        레벨: <span id="level"> 1</span><br>
+        경험치: <span id="_exp"> 0 / 7</span><br>
+        HP: <span id="HP"> 10 / 10</span><br>
+        인벤토리 현황: <span id="inventory"></span><br>
+        공격력: <span id="str"> 5</span><br>
+        방어력: <span id="_def"> 5</span>
+      </div>
+      <div id="game"></div>
+      <div id="event_description"></div>
+      <div id="event_result"></div>
+      <div id="event_continue_battle"></div>
+      <div id="control">
+        <button value="1">동</button>
+        <button value="3">서</button>
+        <button value="2">남</button>
+        <button value="0">북</button>
+      </div>
     </div>
-    <div id="game"></div>
-    <div id="event_description"></div>
-    <div id="event_result"></div>
-    <div id="event_continue_battle"></div>
-    <div id="control">
-      <button value="1">동</button>
-      <button value="3">서</button>
-      <button value="2">남</button>
-      <button value="0">북</button>
-    </div>
+
 
   <script>
+    const createMap = () => {
+      const rowCnt = 10;
+      const columnCnt = 10;
+      let insertTr = '';
+
+      for (let i = 0; i < rowCnt; i++) {
+        insertTr += '<tr>';
+        for (let j = 0; j < columnCnt; j++)  {
+          insertTr += `<td id="(${i}, ${j})" class="location">`;
+          insertTr += '</td>';
+        }
+        insertTr += '</tr>';
+      }
+      document.write('</table>');
+
+      $('#map').append(insertTr);
+    }
+    createMap();
+
     const sendAction = (url, params = {}) => {
       $.ajax({
         url,
@@ -49,6 +72,13 @@
         $('#position').text(`(${field.x},${field.y})`);
         const x = field.x;
         const y = field.y;
+
+        const locations = document.getElementsByClassName('location');
+        for(let i = 0; i < locations.length; i++) {
+          locations[i].style.backgroundColor = 'white';
+        }
+        const locationId = `(${y}, ${x})`;
+        document.getElementById(locationId).style.backgroundColor = 'gray';
 
         $('#control').html('');
         res.actions.forEach((action) => {
