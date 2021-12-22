@@ -106,6 +106,7 @@ app.post("/player/create", setAuth, async (req, res) => {
   const user = req.user;
   var name = req.body.name;
   try {
+    let msg;
     if (user.name) {
       msg = "You already have a name";
     } else if (await User.exists({ name })) {
