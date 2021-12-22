@@ -4,11 +4,20 @@ body {
 
 #container {
     margin: 10px;
+    display: flex;
+}
+
+#map {
+    margin: 20px;
 }
 
 #map td {
     width: 30px;
     height: 30px;
+}
+
+#containerRight {
+    margin: 20px;
 }
 
 #control button {
