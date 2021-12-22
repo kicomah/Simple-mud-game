@@ -215,6 +215,18 @@ app.post("/action", setAuth, async (req, res) => {
         const numberOfItems = player.inventory.length;
         if (numberOfItems > 0) {
           const randomInt = Math.floor(Math.random() * (numberOfItems - 1));
+          let lostItem = player.inventory[randomInt];
+          if (lostItem === "나무목도") {   //아이템 잃어버리면 능력치 감소
+            player.str -= 1;
+          } else if (lostItem === "천갑옷") {
+            player._def -= 1;
+          } else if (lostItem === "강철검") {
+            player._str -= 4;
+          } else if (lostItem === "강철도끼") {
+            player._str -= 5;
+          } else if (lostItem === "강철갑옷") {
+            player._def -= 5;
+          }
           player.inventory.splice(randomInt, 1);
         }
       } else {
